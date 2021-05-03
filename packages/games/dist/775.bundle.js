@@ -1,0 +1,1 @@
+(self.webpackChunkgames=self.webpackChunkgames||[]).push([[775],{775:(e,a,n)=>{"use strict";n.r(a),n.d(a,{render:()=>r});var t=n(336),c=n(84);const r=()=>c.render(t.createElement("div",null,"React with Webpack and Babel"),document.getElementById("app"))}}]);
