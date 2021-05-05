@@ -3,14 +3,16 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
-  "devDependencies": {
-    "lerna": "^4.0.0"
-  },
   "scripts": {
+    "dev": "yarn build && yarn start",
+    "build": "lerna run build --stream",
     "start": "lerna run start --stream"
   },
   "private": true,
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "devDependencies": {
+    "lerna": "^4.0.0"
+  }
 }

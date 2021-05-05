@@ -1,7 +1,7 @@
 {
   "name": "games",
   "version": "1.0.0",
-  "main": "src/index.jsx",
+  "main": "src/index.js",
   "license": "MIT",
   "dependencies": {
     "react": "^17.0.2",
@@ -14,6 +14,7 @@
   },
   "devDependencies": {
     "esbuild-loader": "^2.12.0",
+    "html-webpack-plugin": "^5.3.1",
     "webpack": "^5.36.2",
     "webpack-cli": "^4.6.0",
     "webpack-dev-server": "^3.11.2"
