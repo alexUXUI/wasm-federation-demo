@@ -29,12 +29,19 @@ module.exports = {
   devServer: {
     contentBase: path.resolve(__dirname, "./dist"),
     port: 3000,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+      "Access-Control-Allow-Headers":
+        "X-Requested-With, content-type, Authorization",
+    },
   },
   plugins: [
     new ModuleFederationPlugin({
       name: "Games",
       remotes: {
         GameOfLife: `GameOfLife@http://localhost:3001/remoteEntry.js`,
+        WasmModule: `WasmModule@http://localhost:3003/remoteEntry.js`,
       },
       shared: { react: { singleton: true }, "react-dom": { singleton: true } },
     }),
