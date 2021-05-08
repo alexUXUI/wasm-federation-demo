@@ -1,3 +1,6 @@
+mod utils;
+mod universe;
+
 use wasm_bindgen::prelude::*;
 use web_sys::console;
 
@@ -33,3 +36,4 @@ pub fn main_js() -> Result<(), JsValue> {
 
     Ok(())
 }
+
