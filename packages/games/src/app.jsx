@@ -1,37 +1,23 @@
-import React from "react";
+import React, { useState } from "react";
 import GameOfLife from "GameOfLife/GameOfLife";
 
-import("WasmModule/WasmModule")
-  .then((data) => {
-    console.log(`loaded Wasm module`);
-    console.log(`YOOO`);
-
-    if (data) {
-      console.log(`have data`);
-      if (data.Universe) {
-        console.log(`have universe`);
-
-        const pre = document.getElementById("game-of-life-canvas");
-        const universe = data.Universe();
-
-        const renderLoop = () => {
-          pre.textContent = universe.render();
-          universe.tick();
-          console.log(`render`);
-          requestAnimationFrame(renderLoop);
-        };
-
-        requestAnimationFrame(renderLoop);
-      }
-    }
-  })
-  .catch(console.error);
+import * as WasmModule from "WasmModule/WasmModule";
 
 const App = () => {
+  const handleClick = (e) => {
+    e.preventDefault();
+    import("WasmModule/WasmModule")
+      .then(({ greet }) => {
+        greet("World!");
+      })
+      .catch(console.error);
+  };
+
   return (
     <div>
       <h1>Game Directory</h1>
       <h4>Games:</h4>
+      <button onClick={handleClick}>Greet</button>
       <ul>
         <li>
           <GameOfLife />
