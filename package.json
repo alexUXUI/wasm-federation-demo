@@ -1,11 +1,9 @@
 {
-  "name": "game-app",
+  "name": "wasm-federation-demo",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "yarn build && yarn start",
-    "build": "lerna run build --stream",
     "start": "lerna run start --stream"
   },
   "private": true,

@@ -2,29 +2,38 @@
 
 Demo of how Module Federation can be used to federate Wasm modules.
 
+#### Acknowledgements:
+
+This demo is built upon many OSS projects including [Webpack Module Federation](https://webpack.js.org/concepts/module-federation/),
+and [Rust Webpack Template](https://github.com/rustwasm/rust-webpack-template).
+
 ## Up and Running
 
 ---
 
 From the root of the project run: `yarn && yarn start`
 
-This will use Lerna to start the `Host` and `Remote` applications in dev mode.
+This will start the `Host` and `Remote` applications in dev mode.
 
-Once yarn has installed the dependencies and webpack has bundled the `Host` and `Remote` applications, the `Host` app will be locally hosted on `3000` and `Remote` is hosted on port `3001`.
+The `Host` app is hosted on port `3000` and `Remote` is hosted on port `3001`.
 
 Navigate to your browser and open the `Host` http://localhost:3000.
 
-Click the "greet" button and the onClick handler for the callback function will call a wasm module that export s a greet function.
+Using Module Fededration, the `Host` application dynamically imports a Wasm module from the `Remote` application. The federated Wasm module exports a `greet` function which takes a string arg and passes it to the `window.alert` function.
+
+The `Host` application consumes the Wasm based `greet` function by invoking it in the onClick callback of the "greet" button. Additionally, the Wasm module defined in the `Remote` uses the [web_sys](https://rustwasm.github.io/wasm-bindgen/api/web_sys/) crate, which exposes raw API bindings, for logging to the javascript console _from_ Rust.
 
 ---
 
-## Host
+## Packages/Host
 
 Consumer of federated Wasm module. Uses React but could also be written in plain JavaScript like the `Remote`.
 
 ---
 
-## Remote
+## Packages/Remote
+
+This package was bootstrapped with the [Rust Webpack Template](https://github.com/rustwasm/rust-webpack-template) project. For more, visit their repo as well as the fabulous docs at the [Rust Wasm webiste](https://rustwasm.github.io/docs/book/).
 
 Exposes Wasm module. Wasm module is built with Rust, compiled by webpack wasm-pack loader.
 

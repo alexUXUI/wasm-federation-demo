@@ -37,7 +37,6 @@ module.exports = {
       remotes: {
         WasmModule: `WasmModule@http://localhost:3001/remoteEntry.js`,
       },
-      shared: { react: { singleton: true }, "react-dom": { singleton: true } },
     }),
     new HtmlWebpackPlugin({
       template: "./public/index.html",

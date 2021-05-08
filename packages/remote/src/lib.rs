@@ -29,7 +29,7 @@ pub fn main_js() -> Result<(), JsValue> {
 
 
     // Your code goes here!
-    console::log_1(&JsValue::from_str("Hello world! I love rust and wasm this is awesome!"));
+    console::log_1(&JsValue::from_str("I love rust and wasm!"));
 
     Ok(())
 }
