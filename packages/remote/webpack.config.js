@@ -7,26 +7,23 @@ const { ModuleFederationPlugin } = require("webpack").container;
 const dist = path.resolve(__dirname, "dist");
 
 module.exports = {
-  mode: "production",
   entry: {
-    index: "./js/index.js",
+    index: "./public/index.js",
   },
   output: {
     path: dist,
     filename: "[name].js",
   },
   devServer: {
-    port: 3003,
-    contentBase: dist,
+    port: 3001,
+    contentBase: path.resolve(__dirname, "dist"),
+    open: false,
     headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-      "Access-Control-Allow-Headers":
-        "X-Requested-With, content-type, Authorization",
+      "Access-Control-Allow-Origin": "http://localhost:3000",
     },
   },
   plugins: [
-    new CopyPlugin([path.resolve(__dirname, "static")]),
+    new CopyPlugin([path.resolve(__dirname, "public")]),
 
     new WasmPackPlugin({
       crateDirectory: __dirname,
@@ -38,7 +35,6 @@ module.exports = {
       exposes: {
         "./WasmModule": "./pkg/",
       },
-      shared: { react: { singleton: true }, "react-dom": { singleton: true } },
     }),
   ],
   experiments: { asyncWebAssembly: true },

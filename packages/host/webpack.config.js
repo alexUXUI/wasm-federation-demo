@@ -2,11 +2,6 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { ModuleFederationPlugin } = require("webpack").container;
 const path = require("path");
 
-const devServer = {
-  contentBase: path.resolve(__dirname, "./dist"),
-  port: 3001,
-};
-
 module.exports = {
   entry: path.resolve(__dirname, "./src/index.js"),
   output: {
@@ -31,13 +26,16 @@ module.exports = {
       },
     ],
   },
-  devServer,
+  devServer: {
+    contentBase: path.resolve(__dirname, "./dist"),
+    port: 3000,
+    open: true,
+  },
   plugins: [
     new ModuleFederationPlugin({
-      name: "GameOfLife",
-      filename: "remoteEntry.js",
-      exposes: {
-        "./GameOfLife": "./src/GameOfLife/",
+      name: "Host",
+      remotes: {
+        WasmModule: `WasmModule@http://localhost:3001/remoteEntry.js`,
       },
       shared: { react: { singleton: true }, "react-dom": { singleton: true } },
     }),
