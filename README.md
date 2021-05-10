@@ -7,21 +7,72 @@ Demo of how Module Federation can be used to federate Wasm modules.
 This demo is built upon many OSS projects including [Webpack Module Federation](https://webpack.js.org/concepts/module-federation/),
 and [Rust Webpack Template](https://github.com/rustwasm/rust-webpack-template).
 
+## Project Dependencies
+
+Please install these two dependencies before beginning:
+
+[Rust](https://www.rust-lang.org/tools/install)
+
+```shell
+$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+[wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
+
+```shell
+$ curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+```
+
 ## Up and Running
 
----
+From the root of the project run: `yarn && yarn start`. This will start the `Host` and `Remote` applications in dev mode. The `Host` app is hosted on port `3000` and `Remote` is hosted on port `3001`.
 
-From the root of the project run: `yarn && yarn start`
+Navigate to your browser and open the `Host` on http://localhost:3000.
 
-This will start the `Host` and `Remote` applications in dev mode.
+Using Webpack Module Fededration, the `Host` application dynamically imports a Wasm module from the `Remote` application.
 
-The `Host` app is hosted on port `3000` and `Remote` is hosted on port `3001`.
+`packages/host/webpack.config.js`
 
-Navigate to your browser and open the `Host` http://localhost:3000.
+```JavaScript
+new ModuleFederationPlugin({
+    name: "Host",
+    remotes: {
+        GameOfLifeModule: `WasmModule@http://localhost:3001/remoteEntry.js`,
+    },
+}),
+```
 
-Using Module Fededration, the `Host` application dynamically imports a Wasm module from the `Remote` application. The federated Wasm module exports a `greet` function which takes a string arg and passes it to the `window.alert` function.
+The `Remote` app uses Webpack Module Federation to expose the Wasm module for consumption by the `Host` app.
 
-The `Host` application consumes the Wasm based `greet` function by invoking it in the onClick callback of the "greet" button. Additionally, the Wasm module defined in the `Remote` uses the [web_sys](https://rustwasm.github.io/wasm-bindgen/api/web_sys/) crate, which exposes raw API bindings, for logging to the javascript console _from_ Rust.
+```JavaScript
+new ModuleFederationPlugin({
+    name: "GameOfLifeModule",
+    filename: "remoteEntry.js",
+    exposes: {
+        "./GameOfLifeLogic": "./pkg/",
+    },
+}),
+```
+
+This Wasm module contains the logic for [Conways Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life).
+
+The usage of the Wasm module can be found in the `packages/host/app.jsx` file on lines 2 and 12. On line 2 we are importing the federated Wasm module:
+
+```jsx
+import * as GameOfLife from "GameOfLifeModule/WasmModule";
+```
+
+and on line 12 we are consuming the module:
+
+```JavaScript
+GameOfLife.then(({ Universe }) => {
+  if (!cells) {
+    setCells(Universe.new());
+  }
+});
+```
+
+As you can see the Wasm Module exports a class `Universe` which we use to initialize a new Game Of Life on line 14. We then set the instance of the Game in react state on the same line, and refernce the Universe as `cells` throughout the rest of the component.
 
 ---
 
