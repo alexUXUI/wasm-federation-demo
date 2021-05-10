@@ -1,0 +1,1 @@
+/Users/alexbennett/Desktop/wasm-federation-demo/packages/remote/target/wasm32-unknown-unknown/debug/rust_webpack_template.wasm: /Users/alexbennett/Desktop/wasm-federation-demo/packages/remote/src/lib.rs /Users/alexbennett/Desktop/wasm-federation-demo/packages/remote/src/universe.rs /Users/alexbennett/Desktop/wasm-federation-demo/packages/remote/src/utils.rs build.rs
