@@ -2,6 +2,9 @@ const path = require("path");
 const CopyPlugin = require("copy-webpack-plugin");
 const { ModuleFederationPlugin } = require("webpack").container;
 
+// @TODO: uncomment this if you want to dev on the Rust src code.
+// const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
+
 const dist = path.resolve(__dirname, "dist");
 
 module.exports = {
@@ -22,8 +25,16 @@ module.exports = {
   experiments: { asyncWebAssembly: true },
 
   plugins: [
-    new CopyPlugin([path.resolve(__dirname, "public")]),
+    // @TODO: uncomment this if you want to dev on the Rust src code.
+    // Webpack will load the Rust code and compile it to Wasm using Wasm-Pack.
+    // Wasm-pack will also generate all the JS bindings needed to interop with JS,
+    // found in the `./pkg` directory.
 
+    // new WasmPackPlugin({
+    //   crateDirectory: __dirname,
+    // }),
+
+    new CopyPlugin([path.resolve(__dirname, "public")]),
     new ModuleFederationPlugin({
       name: "GameOfLifeModule",
       filename: "remoteEntry.js",

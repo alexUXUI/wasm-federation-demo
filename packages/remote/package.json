@@ -6,10 +6,11 @@
     "test": "cargo test && wasm-pack test --headless"
   },
   "devDependencies": {
-    "copy-webpack-plugin": "^5.0.3",
-    "rimraf": "^3.0.0",
     "webpack": "^5.36.2",
     "webpack-cli": "^4.6.0",
-    "webpack-dev-server": "^3.11.2"
+    "webpack-dev-server": "^3.11.2",
+    "@wasm-tool/wasm-pack-plugin": "^1.1.0",
+    "copy-webpack-plugin": "^5.0.3",
+    "rimraf": "^3.0.0"
   }
 }
