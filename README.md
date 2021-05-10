@@ -6,13 +6,15 @@ Using Module Federation to federate Wasm modules.
 
 Please install these two dependencies before beginning:
 
-[Rust](https://www.rust-lang.org/tools/install)
+Install [Rust](https://www.rust-lang.org/tools/install)
 
 ```shell
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-[wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
+Then source your bash profile after this step ^
+
+Install [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
 
 ```shell
 $ curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
