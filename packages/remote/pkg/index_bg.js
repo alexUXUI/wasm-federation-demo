@@ -49,6 +49,18 @@ function takeObject(idx) {
     return ret;
 }
 
+function _assertNum(n) {
+    if (typeof(n) !== 'number') throw new Error('expected a number argument');
+}
+
+let cachegetInt32Memory0 = null;
+function getInt32Memory0() {
+    if (cachegetInt32Memory0 === null || cachegetInt32Memory0.buffer !== wasm.memory.buffer) {
+        cachegetInt32Memory0 = new Int32Array(wasm.memory.buffer);
+    }
+    return cachegetInt32Memory0;
+}
+
 function logError(f) {
     return function () {
         try {
@@ -141,17 +153,6 @@ export function main_js() {
     wasm.main_js();
 }
 
-function _assertNum(n) {
-    if (typeof(n) !== 'number') throw new Error('expected a number argument');
-}
-
-let cachegetInt32Memory0 = null;
-function getInt32Memory0() {
-    if (cachegetInt32Memory0 === null || cachegetInt32Memory0.buffer !== wasm.memory.buffer) {
-        cachegetInt32Memory0 = new Int32Array(wasm.memory.buffer);
-    }
-    return cachegetInt32Memory0;
-}
 /**
 */
 export const Cell = Object.freeze({ Dead:0,"0":"Dead",Alive:1,"1":"Alive", });
@@ -221,14 +222,14 @@ export class Universe {
     }
 }
 
+export const __wbg_alert_4914cfe43bafd4ba = logError(function(arg0, arg1) {
+    alert(getStringFromWasm0(arg0, arg1));
+});
+
 export const __wbindgen_string_new = function(arg0, arg1) {
     var ret = getStringFromWasm0(arg0, arg1);
     return addHeapObject(ret);
 };
-
-export const __wbg_alert_4914cfe43bafd4ba = logError(function(arg0, arg1) {
-    alert(getStringFromWasm0(arg0, arg1));
-});
 
 export const __wbg_error_4bb6c2a97407129a = logError(function(arg0, arg1) {
     try {

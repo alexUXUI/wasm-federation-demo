@@ -75,7 +75,9 @@ In the example above, the Wasm Module exports a class `Universe` which we use to
 ## Local Development
 
 In order to run the Rust->Wasm toolchain, pleas make sure you have the project dependencies in the next section installed.
-Once those are installed, you can start developing on the `Remote` app or the `Host` app with `yarn start`.
+Once those are installed, go to `packages/remote/webpack.config.js` and uncomment the code that has been commented out.
+
+you can start developing on the `Remote` app or the `Host` app with `yarn start`.
 
 ## Project Dependencies
 
@@ -87,7 +89,7 @@ Install [Rust](https://www.rust-lang.org/tools/install)
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-Source your bash profile after the step above.
+Source your bash profile after the step above (source $HOME/.cargo/env)
 
 Install [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
 

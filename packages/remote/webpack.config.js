@@ -23,8 +23,9 @@ module.exports = {
     },
   },
   experiments: { asyncWebAssembly: true },
-
   plugins: [
+    new CopyPlugin([path.resolve(__dirname, "public")]),
+
     // @TODO: uncomment this if you want to dev on the Rust src code.
     // Webpack will load the Rust code and compile it to Wasm using Wasm-Pack.
     // Wasm-pack will also generate all the JS bindings needed to interop with JS,
@@ -34,7 +35,6 @@ module.exports = {
     //   crateDirectory: __dirname,
     // }),
 
-    new CopyPlugin([path.resolve(__dirname, "public")]),
     new ModuleFederationPlugin({
       name: "GameOfLifeModule",
       filename: "remoteEntry.js",
