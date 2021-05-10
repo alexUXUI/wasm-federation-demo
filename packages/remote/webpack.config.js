@@ -1,6 +1,5 @@
 const path = require("path");
 const CopyPlugin = require("copy-webpack-plugin");
-const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 const { ModuleFederationPlugin } = require("webpack").container;
 
 const dist = path.resolve(__dirname, "dist");
@@ -24,10 +23,6 @@ module.exports = {
 
   plugins: [
     new CopyPlugin([path.resolve(__dirname, "public")]),
-
-    new WasmPackPlugin({
-      crateDirectory: __dirname,
-    }),
 
     new ModuleFederationPlugin({
       name: "GameOfLifeModule",
