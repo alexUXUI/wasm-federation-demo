@@ -1,37 +1,59 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
-import * as WasmModule from "WasmModule/WasmModule";
+import * as GameOfLife from "GameOfLifeModule/WasmModule";
 
 const App = () => {
-  const gameOfLifeBoard = useRef();
+  const [cells, setCells] = useState(undefined);
+  const board = useRef();
+
+  const animationId = useRef();
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useLayoutEffect(() => {
-    WasmModule.then((data) => {
-      const universe = data.Universe.new();
-
-      const renderLoop = () => {
-        if (gameOfLifeBoard?.current) {
-          gameOfLifeBoard.current.textContent = universe.render();
-          universe.tick();
-          requestAnimationFrame(renderLoop);
-        }
-      };
-
-      requestAnimationFrame(renderLoop);
+    GameOfLife.then(({ Universe }) => {
+      if (!cells) {
+        setCells(Universe.new());
+      }
     });
-  });
+  }, []);
 
-  const handleClick = (e) => {
-    e.preventDefault();
-    WasmModule.then(({ greet }) => {
-      greet("World!");
-    }).catch(console.error);
+  const loop = () => {
+    cells.tick();
+    board.current.textContent = cells.render();
+    start();
+  };
+
+  const start = () => {
+    setIsPlaying(true);
+    animationId.current = window.requestAnimationFrame(loop);
+  };
+
+  const stop = () => {
+    setIsPlaying(false);
+    window.cancelAnimationFrame(animationId.current);
+    animationId.current = undefined;
+  };
+
+  const tick = () => {
+    cells.tick();
+    board.current.textContent = cells.render();
+  };
+
+  const reset = () => {
+    cells.reset();
+    board.current.textContent = cells.render();
+  };
+
+  const toggle = () => {
+    animationId.current ? stop() : start();
   };
 
   return (
     <main>
       <h1>Host App</h1>
-      <button onClick={handleClick}>Greet</button>
-      <div ref={gameOfLifeBoard}></div>
+      <button onClick={tick}>Tick 🔂</button>
+      <button onClick={toggle}>{isPlaying ? "Stop 🛑" : "Play ▶️"}</button>
+      <button onClick={reset}>Reset ♻️</button>
+      <div ref={board} />
     </main>
   );
 };

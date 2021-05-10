@@ -20,6 +20,27 @@ pub struct Universe {
 
 #[wasm_bindgen]
 impl Universe {
+    pub fn new() -> Universe {
+        let width = 64;
+        let height = 64;
+
+        let cells = (0..width * height)
+            .map(|i| {
+                if i % 2 == 0 || i % 7 == 0 {
+                    Cell::Alive
+                } else {
+                    Cell::Dead
+                }
+            })
+            .collect();
+
+        Universe {
+            width,
+            height,
+            cells,
+        }
+    }
+    
     fn get_index(&self, row: u32, column: u32) -> usize {
         (row * self.width + column) as usize
     }
@@ -40,11 +61,7 @@ impl Universe {
         }
         count
     }
-}
 
-/// Public methods, exported to JavaScript.
-#[wasm_bindgen]
-impl Universe {
     pub fn tick(&mut self) {
         let mut next = self.cells.clone();
 
@@ -78,10 +95,9 @@ impl Universe {
         self.cells = next;
     }
 
-    pub fn new() -> Universe {
+    pub fn reset(&mut self) {
         let width = 64;
         let height = 64;
-
         let cells = (0..width * height)
             .map(|i| {
                 if i % 2 == 0 || i % 7 == 0 {
@@ -91,12 +107,7 @@ impl Universe {
                 }
             })
             .collect();
-
-        Universe {
-            width,
-            height,
-            cells,
-        }
+        self.cells = cells;
     }
 
     pub fn render(&self) -> String {

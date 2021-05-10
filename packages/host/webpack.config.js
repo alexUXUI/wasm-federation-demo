@@ -35,7 +35,7 @@ module.exports = {
     new ModuleFederationPlugin({
       name: "Host",
       remotes: {
-        WasmModule: `WasmModule@http://localhost:3001/remoteEntry.js`,
+        GameOfLifeModule: `WasmModule@http://localhost:3001/remoteEntry.js`,
       },
     }),
     new HtmlWebpackPlugin({

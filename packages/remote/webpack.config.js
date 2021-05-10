@@ -20,6 +20,8 @@ module.exports = {
       "Access-Control-Allow-Origin": "http://localhost:3000",
     },
   },
+  experiments: { asyncWebAssembly: true },
+
   plugins: [
     new CopyPlugin([path.resolve(__dirname, "public")]),
 
@@ -28,12 +30,11 @@ module.exports = {
     }),
 
     new ModuleFederationPlugin({
-      name: "WasmModule",
+      name: "GameOfLifeModule",
       filename: "remoteEntry.js",
       exposes: {
-        "./WasmModule": "./pkg/",
+        "./GameOfLifeLogic": "./pkg/",
       },
     }),
   ],
-  experiments: { asyncWebAssembly: true },
 };
