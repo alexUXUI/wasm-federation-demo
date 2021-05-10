@@ -28,14 +28,14 @@ module.exports = {
   },
   devServer: {
     contentBase: path.resolve(__dirname, "./dist"),
-    port: 3000,
+    port: 8080,
     open: true,
   },
   plugins: [
     new ModuleFederationPlugin({
       name: "Host",
       remotes: {
-        GameOfLifeModule: `WasmModule@http://localhost:3001/remoteEntry.js`,
+        GameOfLifeModule: `GameOfLifeModule@http://localhost:8081/remoteEntry.js`,
       },
     }),
     new HtmlWebpackPlugin({

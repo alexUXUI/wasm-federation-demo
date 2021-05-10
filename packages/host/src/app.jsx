@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
-import * as GameOfLife from "GameOfLifeModule/WasmModule";
+import * as GameOfLife from "GameOfLifeModule/GameOfLifeModule";
 
 const App = () => {
   const [cells, setCells] = useState(undefined);

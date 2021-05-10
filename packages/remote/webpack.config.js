@@ -14,10 +14,10 @@ module.exports = {
     filename: "[name].js",
   },
   devServer: {
-    port: 3001,
+    port: 8081,
     contentBase: path.resolve(__dirname, "dist"),
     headers: {
-      "Access-Control-Allow-Origin": "http://localhost:3000",
+      "Access-Control-Allow-Origin": "http://localhost:8080",
     },
   },
   experiments: { asyncWebAssembly: true },
@@ -33,7 +33,7 @@ module.exports = {
       name: "GameOfLifeModule",
       filename: "remoteEntry.js",
       exposes: {
-        "./GameOfLifeLogic": "./pkg/",
+        "./GameOfLifeModule": "./pkg/",
       },
     }),
   ],
