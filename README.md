@@ -1,6 +1,6 @@
 # Federating Wasm Modules
 
-Using Module Federation to dynamically federate Wasm modules at runtime.
+Using Module Federation to dynamically federate Wasm modules between independent applications.
 
 ## Project Dependencies
 
@@ -12,7 +12,7 @@ Install [Rust](https://www.rust-lang.org/tools/install)
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-Then source your bash profile after this step ^
+Source your bash profile after the step above.
 
 Install [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
 
@@ -22,17 +22,26 @@ $ curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
 ## Up and Running
 
-From the root of the project run: `yarn && yarn start`. This will start the `Host` and `Remote` applications in dev mode. The `Host` app is hosted on port `8080` and `Remote` is hosted on port `8081`.
+From the root of the project run:
+
+`yarn && yarn start`.
+
+This will start the `Host` and `Remote` applications in dev mode. The `Host` app is hosted on port `8080` and `Remote` is hosted on port `8081`.
 
 Navigate to your browser and open the `Host` on http://localhost:8080.
 
 ## Module Federation
 
+Webpack Module Federation Plugin is what makes it possible to share the Wasm module between our two apps at runtime. Below is a rough, low-fidelity diagram illustrating how webpack is used to share code.
+
+For more on Module federation, see the [docs](https://webpack.js.org/concepts/module-federation/)
+and checkout this [write-up](https://medium.com/swlh/webpack-5-module-federation-a-game-changer-to-javascript-architecture-bcdd30e02669).
+
 ![Diagram](https://raw.githubusercontent.com/alexUXUI/wasm-federation-demo/main/diagram.png)
 
-Using Webpack Module Fededration, the `Host` application dynamically imports a Wasm module from the `Remote` application.
+As seen in the diagram above, the `Host` application dynamically imports a Wasm module from the `Remote` application. Let's see how this is implemented in our webpack configs.
 
-`packages/host/webpack.config.js`
+Host configs: `packages/host/webpack.config.js`
 
 ```JavaScript
 new ModuleFederationPlugin({
@@ -43,7 +52,7 @@ new ModuleFederationPlugin({
 }),
 ```
 
-The `Remote` app uses Webpack Module Federation to expose the Wasm module for consumption by the `Host` app.
+Remote configs: `packages/remote/webpack.config.js`
 
 ```JavaScript
 new ModuleFederationPlugin({
@@ -55,14 +64,18 @@ new ModuleFederationPlugin({
 }),
 ```
 
+The `Remote` app uses Webpack Module Federation to expose the Wasm module for consumption by the `Host` app. As pictured above, the `./pkg` code will be made available through the `http://localhost:8081/remoteEntry.js` file.
+
 ## Wasm
 
-The `GameOfLifeModule` Wasm module, pictured above, contains the logic for [Conways Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life).
+The `GameOfLife` Wasm module, pictured above as `GameOfLifeModule`, contains the logic for [Conways Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life). The source code for this particular implementation was borrowed from [The Offical Rust Wasm Docs.](https://rustwasm.github.io/docs/book/game-of-life/implementing.html)
 
-The usage of the Wasm module can be found in the `packages/host/app.jsx` file on lines 2 and 12. On line 2 we are importing the federated Wasm module:
+The concumption and usage of our Wasm module can be found in the `packages/host/app.jsx` file on lines 2 and 12.
+
+On line 2 we are importing the federated Wasm module:
 
 ```JavaScript
-import * as GameOfLife from "GameOfLifeModule/WasmModule";
+import * as GameOfLife from "GameOfLifeModule/GameOfLifeModule";
 ```
 
 and on line 12 we are consuming the module:
