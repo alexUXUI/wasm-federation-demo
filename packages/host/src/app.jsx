@@ -50,8 +50,8 @@ const App = () => {
   return (
     <main>
       <h1>Host App</h1>
-      <button onClick={tick}>Tick 🔂</button>
       <button onClick={toggle}>{isPlaying ? "Stop 🛑" : "Play ▶️"}</button>
+      <button onClick={tick}>Tick 🔂</button>
       <button onClick={reset}>Reset ♻️</button>
       <div ref={board} />
     </main>

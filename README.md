@@ -2,24 +2,6 @@
 
 Using Module Federation to dynamically federate Wasm modules between independent applications.
 
-## Project Dependencies
-
-Please install these two dependencies before beginning:
-
-Install [Rust](https://www.rust-lang.org/tools/install)
-
-```shell
-$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
-Source your bash profile after the step above.
-
-Install [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
-
-```shell
-$ curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-```
-
 ## Up and Running
 
 From the root of the project run:
@@ -89,6 +71,29 @@ GameOfLife.then(({ Universe }) => {
 ```
 
 In the example above, the Wasm Module exports a class `Universe` which we use to initialize a new Game Of Life. We then set the instance of the new Universe in a slice of react state on the same line, and refernce the Universe as `cells` throughout the rest of the component. This allows us to use react to control a Wasm module that is being federated into react from a completely stand-alonle remote app.
+
+## Local Development
+
+In order to run the Rust->Wasm toolchain, pleas make sure you have the project dependencies in the next section installed.
+Once those are installed, you can start developing on the `Remote` app or the `Host` app with `yarn start`.
+
+## Project Dependencies
+
+Please install these two dependencies before beginning:
+
+Install [Rust](https://www.rust-lang.org/tools/install)
+
+```shell
+$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Source your bash profile after the step above.
+
+Install [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
+
+```shell
+$ curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+```
 
 ## `Packages/Host`
 
