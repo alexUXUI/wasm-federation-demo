@@ -1,6 +1,6 @@
 # Federating Wasm Modules
 
-Using Module Federation to federate Wasm modules.
+Using Module Federation to dynamically federate Wasm modules at runtime.
 
 ## Project Dependencies
 
@@ -27,6 +27,8 @@ From the root of the project run: `yarn && yarn start`. This will start the `Hos
 Navigate to your browser and open the `Host` on http://localhost:8080.
 
 ## Module Federation
+
+![Diagram](https://raw.githubusercontent.com/alexUXUI/wasm-federation-demo/main/diagram.png)
 
 Using Webpack Module Fededration, the `Host` application dynamically imports a Wasm module from the `Remote` application.
 
@@ -59,7 +61,7 @@ The `GameOfLifeModule` Wasm module, pictured above, contains the logic for [Conw
 
 The usage of the Wasm module can be found in the `packages/host/app.jsx` file on lines 2 and 12. On line 2 we are importing the federated Wasm module:
 
-```jsx
+```JavaScript
 import * as GameOfLife from "GameOfLifeModule/WasmModule";
 ```
 
@@ -73,7 +75,7 @@ GameOfLife.then(({ Universe }) => {
 });
 ```
 
-As you can see the Wasm Module exports a class `Universe` which we use to initialize a new Game Of Life on line 14. We then set the instance of the Universe in react state on the same line, and refernce the Universe as `cells` throughout the rest of the component. This allows us to use react in one application to control the Wasm of another application.
+In the example above, the Wasm Module exports a class `Universe` which we use to initialize a new Game Of Life. We then set the instance of the new Universe in a slice of react state on the same line, and refernce the Universe as `cells` throughout the rest of the component. This allows us to use react to control a Wasm module that is being federated into react from a completely stand-alonle remote app.
 
 ## `Packages/Host`
 
