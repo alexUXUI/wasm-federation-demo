@@ -18,7 +18,7 @@ Navigate to your browser and open the `Host` app running on http://localhost:808
 
 Webpack's Module Federation Plugin **powers** the sharing of the Wasm module between our two apps at runtime. Below is a low-fidelity diagram illustrating how webpack is used to share code.
 
-> For more on Module federation, see the [docs](https://webpack.js.org/concepts/module-federation/)
+> 💡 For more on Module federation, see the [docs](https://webpack.js.org/concepts/module-federation/)
 > and checkout this [write-up](https://medium.com/swlh/webpack-5-module-federation-a-game-changer-to-javascript-architecture-bcdd30e02669).
 
 ![Diagram](https://raw.githubusercontent.com/alexUXUI/wasm-federation-demo/main/diagram.png)
@@ -86,9 +86,9 @@ Once those are installed, go to `packages/remote/webpack.config.js` and uncommen
 
 you can start developing on the `Remote` app or the `Host` app with `yarn start`.
 
-## Project Dependencies
+> 💡 For local development of Host app, make sure that the Remote app is also running so that the import of the Wasm module does not fail. You can start both apps by running yarn start in the top-level dir.
 
-Please install these two dependencies before devloping on the Wasm module:
+## Project Dependencies
 
 Install [Rust](https://www.rust-lang.org/tools/install)
 
