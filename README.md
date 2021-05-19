@@ -58,7 +58,7 @@ The `Remote` app uses Webpack Module Federation to expose the Wasm module for co
 
 The `GameOfLife` Wasm module, pictured above as `GameOfLifeModule`, contains the logic for [Conways Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life). The source code for this particular implementation was borrowed from [The Offical Rust Wasm Docs.](https://rustwasm.github.io/docs/book/game-of-life/implementing.html)
 
-The concumption and usage of our Wasm module can be found in the `packages/host/app.jsx` file on lines 2 and 12.
+The consumption and usage of our Wasm module can be found in the `packages/host/app.jsx` file on lines 2 and 12.
 
 On line 2 we are importing the federated Wasm module:
 
