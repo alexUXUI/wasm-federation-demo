@@ -16,7 +16,7 @@ module.exports = {
     filename: "[name].js",
   },
   devServer: {
-    port: 8081,
+    port: 8083,
     contentBase: path.resolve(__dirname, "dist"),
     headers: {
       "Access-Control-Allow-Origin": "http://localhost:8080",
@@ -36,10 +36,10 @@ module.exports = {
     }),
 
     new ModuleFederationPlugin({
-      name: "GameOfLifeModule",
+      name: "Viz",
       filename: "remoteEntry.js",
       exposes: {
-        "./GameOfLifeModule": "./pkg/",
+        "./Viz": "./pkg/",
       },
     }),
   ],

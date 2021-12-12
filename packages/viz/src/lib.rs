@@ -1,6 +1,6 @@
 mod utils;
-mod universe;
 mod viz;
+mod perf;
 
 use wasm_bindgen::prelude::*;
 use web_sys::console;
@@ -29,8 +29,12 @@ pub fn main_js() -> Result<(), JsValue> {
 
     utils::set_panic_hook();
 
+    // call perf
+    perf::run_perf();
+
     // call the viz init func
     // viz::init_viz();
+
     // This provides better error messages in debug mode.
     // It's disabled in release mode so it doesn't bloat up the file size.
     #[cfg(debug_assertions)]

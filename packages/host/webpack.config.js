@@ -36,6 +36,7 @@ module.exports = {
       name: "Host",
       remotes: {
         GameOfLifeModule: `GameOfLifeModule@http://localhost:8081/remoteEntry.js`,
+        Viz: `Viz@http://localhost:8083/remoteEntry.js`,
       },
     }),
     new HtmlWebpackPlugin({

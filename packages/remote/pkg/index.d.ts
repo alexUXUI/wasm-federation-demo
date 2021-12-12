@@ -1,6 +1,9 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
+*/
+export function init_viz(): void;
+/**
 * @param {string} string
 */
 export function greet(string: string): void;
