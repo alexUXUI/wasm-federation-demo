@@ -8,13 +8,17 @@ module.exports = {
     publicPath: "auto",
   },
   resolve: {
-    extensions: [".js", ".jsx"],
+    extensions: [".js", ".jsx", ".css"],
   },
   module: {
     rules: [
       {
         test: /\.js$/,
         use: "esbuild-loader",
+      },
+      {
+        test: /\.css$/i,
+        use: ["style-loader", "css-loader"],
       },
       {
         test: /\.jsx$/,

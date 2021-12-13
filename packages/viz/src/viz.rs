@@ -7,6 +7,91 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::console;
 
+
+
+
+
+
+// #[wasm_bindgen]
+// extern "C" {
+//     // Use `js_namespace` here to bind `console.log(..)` instead of just
+//     // `log(..)`
+//     #[wasm_bindgen(js_namespace = console)]
+//     fn log(s: &str);
+
+//     #[wasm_bindgen(js_namespace = console, js_name = log)]
+//     fn log_f64(i: f64);
+// }
+
+// fn window() -> web_sys::Window {
+//     web_sys::window().expect("no global `window` exists")
+// }
+
+// fn request_animation_frame(f: &Closure<dyn FnMut()>) {
+//     window()
+//         .request_animation_frame(f.as_ref().unchecked_ref())
+//         .expect("should register `requestAnimationFrame` OK");
+// }
+
+// fn document() -> web_sys::Document {
+//     window()
+//         .document()
+//         .expect("should have a document on window")
+// }
+
+// fn body() -> web_sys::HtmlElement {
+//     document().body().expect("document should have a body")
+// }
+
+// #[wasm_bindgen]
+// pub fn init_viz() {
+//     console::log_1(&JsValue::from_str("Hello from Rust Viz Module yooo!"));
+
+//         // Here we want to call `requestAnimationFrame` in a loop, but only a fixed
+//     // number of times. After it's done we want all our resources cleaned up. To
+//     // achieve this we're using an `Rc`. The `Rc` will eventually store the
+//     // closure we want to execute on each frame, but to start out it contains
+//     // `None`.
+//     //
+//     // After the `Rc` is made we'll actually create the closure, and the closure
+//     // will reference one of the `Rc` instances. The other `Rc` reference is
+//     // used to store the closure, request the first frame, and then is dropped
+//     // by this function.
+//     //
+//     // Inside the closure we've got a persistent `Rc` reference, which we use
+//     // for all future iterations of the loop
+//     let f = Rc::new(RefCell::new(None));
+//     let g = f.clone();
+
+//     let mut i = 0;
+//     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
+//         if i > 300 {
+//             body().set_text_content(Some("All done!"));
+
+//             // Drop our handle to this closure so that it will get cleaned
+//             // up once we return.
+//             let _ = f.borrow_mut().take();
+//             return;
+//         }
+
+//         // Set the body's text content to how many times this
+//         // requestAnimationFrame callback has fired.
+//         i += 1;
+//         let text = format!("requestAnimationFrame has been called {} times.", i);
+//         body().set_text_content(Some(&text));
+
+//         // Schedule ourself for another requestAnimationFrame callback.
+//         request_animation_frame(f.borrow().as_ref().unwrap());
+//     }) as Box<dyn FnMut()>));
+
+//     request_animation_frame(g.borrow().as_ref().unwrap());
+//     // Ok(())
+// }
+
+
+// extern crate console_error_panic_hook;
+
+
 #[wasm_bindgen]
 extern "C" {
     // Use `js_namespace` here to bind `console.log(..)` instead of just
@@ -16,6 +101,7 @@ extern "C" {
 
     #[wasm_bindgen(js_namespace = console, js_name = log)]
     fn log_f64(i: f64);
+
 }
 
 fn window() -> web_sys::Window {
@@ -28,57 +114,194 @@ fn request_animation_frame(f: &Closure<dyn FnMut()>) {
         .expect("should register `requestAnimationFrame` OK");
 }
 
-fn document() -> web_sys::Document {
-    window()
-        .document()
-        .expect("should have a document on window")
+async fn load_and_play_file() -> Result<web_sys::AnalyserNode, JsValue> {
+    let document = web_sys::window().unwrap().document().unwrap();
+
+    let file_input: web_sys::HtmlInputElement = document
+        .get_element_by_id("file-input")
+        .unwrap()
+        .dyn_into::<web_sys::HtmlInputElement>()
+        .map_err(|_| ())
+        .unwrap();
+
+    let file: web_sys::File = file_input.files().unwrap().get(0).unwrap();
+
+    let audio_ctx = web_sys::AudioContext::new()?;
+
+    let ab: js_sys::ArrayBuffer = wasm_bindgen_futures::JsFuture::from(file.array_buffer())
+        .await?
+        .dyn_into()
+        .unwrap();
+
+    let buf: web_sys::AudioBuffer =
+        wasm_bindgen_futures::JsFuture::from(audio_ctx.decode_audio_data(&ab).unwrap())
+            .await?
+            .dyn_into()
+            .unwrap();
+
+    let source = audio_ctx.create_buffer_source().unwrap();
+
+    source.set_buffer(Some(&buf));
+
+    let analyser = audio_ctx.create_analyser()?;
+    analyser.set_fft_size(2048);
+
+    source.connect_with_audio_node(&analyser)?;
+    analyser.connect_with_audio_node(&audio_ctx.destination())?;
+
+    source.start()?;
+
+    Ok(analyser)
 }
 
-fn body() -> web_sys::HtmlElement {
-    document().body().expect("document should have a body")
+struct Visualizer {
+    height: u32,
+    width: u32,
+    canvas: web_sys::HtmlCanvasElement,
+    ctx: web_sys::CanvasRenderingContext2d,
+    tmp_canvas: web_sys::HtmlCanvasElement,
+    tmp_ctx: web_sys::CanvasRenderingContext2d,
+    buf: [u8; 2048],
+}
+
+const SLICE_WIDTH: f64 = 2.0 * f64::consts::PI / 2048.0;
+
+impl Visualizer {
+    fn draw(&self, i: u32) {
+        // fetch drawing variables from window
+        let step_factor = window().get("stepFactor").unwrap().as_f64().unwrap();
+        let color_step_factor = window().get("colorStepFactor").unwrap().as_f64().unwrap();
+        let opacity = window().get("opacity").unwrap().as_f64().unwrap();
+        let radius = window().get("radius").unwrap().as_f64().unwrap();
+
+        // save last frame to offscreen canvas with step_factor trimmed off
+        // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+        self.tmp_ctx
+            .draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
+                &self.canvas,
+                self.width as f64 / step_factor,
+                self.height as f64 / step_factor,
+                self.width as f64 * (step_factor - 2.) / step_factor,
+                self.height as f64 * (step_factor - 2.) / step_factor,
+                0.,
+                0.,
+                self.width as f64,
+                self.height as f64,
+            )
+            .unwrap();
+
+        // clear canvas
+        self.ctx.set_fill_style(&"rgb(0, 0, 0)".into());
+        self.ctx
+            .fill_rect(0., 0., f64::from(self.width), f64::from(self.height));
+
+        // set color
+        self.ctx.set_fill_style(
+            &format!(
+                "rgb({}, {}, {})",
+                (i as f64 / color_step_factor / 5.).sin() * 127.5 + 127.5,
+                (i as f64 / color_step_factor / 3.).sin() * 127.5 + 127.5,
+                (i as f64 / color_step_factor).sin() * 127.5 + 127.5,
+            )
+            .into(),
+        );
+
+        // draw old frame with opacity
+        self.ctx.set_global_alpha(opacity);
+        self.ctx
+            .draw_image_with_html_canvas_element(&self.tmp_canvas, 0., 0.)
+            .unwrap();
+        self.ctx.set_global_alpha(1.);
+
+        // render new frame
+        // @MATH
+        let mut theta = 0.;
+        for i in 0..2048 {
+            theta += SLICE_WIDTH;
+            let amp = f64::from(self.buf[i]) / 256.0;
+
+            let r = amp * self.height as f64 * 0.2 + self.height as f64 * 0.09;
+
+            let x = f64::from(self.width / 2) + theta.cos() * r;
+            let y = f64::from(self.height / 2) + theta.sin() * r;
+
+            self.ctx.set_fill_style(&"rgb(128, 0, 0)".into());
+            
+            self.ctx
+                .fill_rect(0., 0., 
+                    f64::from(100), 
+                    f64::from(amp)
+                );
+
+            self.ctx.begin_path();
+            self.ctx
+                .arc(x, y, radius, 0., 2. * f64::consts::PI)
+                .unwrap();
+            self.ctx.fill();
+        }
+    }
 }
 
 #[wasm_bindgen]
-pub fn init_viz() {
-    console::log_1(&JsValue::from_str("Hello from Rust Viz Module yooo!"));
+pub async fn run() -> Result<(), JsValue> {
+    panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-        // Here we want to call `requestAnimationFrame` in a loop, but only a fixed
-    // number of times. After it's done we want all our resources cleaned up. To
-    // achieve this we're using an `Rc`. The `Rc` will eventually store the
-    // closure we want to execute on each frame, but to start out it contains
-    // `None`.
-    //
-    // After the `Rc` is made we'll actually create the closure, and the closure
-    // will reference one of the `Rc` instances. The other `Rc` reference is
-    // used to store the closure, request the first frame, and then is dropped
-    // by this function.
-    //
-    // Inside the closure we've got a persistent `Rc` reference, which we use
-    // for all future iterations of the loop
+    let analyser = load_and_play_file().await?;
+
+    let document = web_sys::window().unwrap().document().unwrap();
+
+    let canvas = document.get_element_by_id("canvas").unwrap();
+    let canvas: web_sys::HtmlCanvasElement = canvas
+        .dyn_into::<web_sys::HtmlCanvasElement>()
+        .map_err(|_| ())
+        .unwrap();
+
+    let context = canvas
+        .get_context("2d")
+        .unwrap()
+        .unwrap()
+        .dyn_into::<web_sys::CanvasRenderingContext2d>()
+        .unwrap();
+
+    let tmp_canvas = document.create_element("canvas").unwrap();
+    let tmp_canvas: web_sys::HtmlCanvasElement = tmp_canvas
+        .dyn_into::<web_sys::HtmlCanvasElement>()
+        .map_err(|_| ())
+        .unwrap();
+
+    tmp_canvas.set_width(canvas.width());
+    tmp_canvas.set_height(canvas.height());
+
+    let tmp_context = tmp_canvas
+        .get_context("2d")
+        .unwrap()
+        .unwrap()
+        .dyn_into::<web_sys::CanvasRenderingContext2d>()
+        .unwrap();
+
+    let mut vis = Visualizer {
+        height: canvas.height(),
+        width: canvas.width(),
+        canvas: canvas,
+        ctx: context,
+        tmp_canvas: tmp_canvas,
+        tmp_ctx: tmp_context,
+        buf: [0; 2048],
+    };
+
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
 
     let mut i = 0;
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-        if i > 300 {
-            body().set_text_content(Some("All done!"));
-
-            // Drop our handle to this closure so that it will get cleaned
-            // up once we return.
-            let _ = f.borrow_mut().take();
-            return;
-        }
-
-        // Set the body's text content to how many times this
-        // requestAnimationFrame callback has fired.
         i += 1;
-        let text = format!("requestAnimationFrame has been called {} times.", i);
-        body().set_text_content(Some(&text));
+        analyser.get_byte_time_domain_data(&mut vis.buf);
+        vis.draw(i);
 
         // Schedule ourself for another requestAnimationFrame callback.
         request_animation_frame(f.borrow().as_ref().unwrap());
     }) as Box<dyn FnMut()>));
-
     request_animation_frame(g.borrow().as_ref().unwrap());
-    // Ok(())
+
+    Ok(())
 }

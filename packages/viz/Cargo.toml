@@ -25,7 +25,10 @@ lto = true
 # to interact with JavaScript.
 humantime = "2.1.0"
 wasm-bindgen = "0.2.69"
-
+js-sys = "0.3.46"
+futures = "0.1.27"
+wasm-bindgen-futures = "0.4.19"
+console_error_panic_hook = "0.1.6"
 
 # `wee_alloc` is a tiny allocator for wasm that is only ~1K in code size
 # compared to the default allocator's ~10K. However, it is slower than the default
@@ -70,6 +73,4 @@ console_error_panic_hook = "0.1.6"
 # These crates are used for running unit tests.
 [dev-dependencies]
 wasm-bindgen-test = "0.2.45"
-futures = "0.1.27"
-js-sys = "0.3.46"
-wasm-bindgen-futures = "0.4.19"
+
