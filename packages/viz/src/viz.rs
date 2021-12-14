@@ -52,7 +52,11 @@ async fn load_and_play_file() -> Result<web_sys::AnalyserNode, JsValue> {
         .map_err(|_| ())
         .unwrap();
 
-    let file: web_sys::File = file_input.files().unwrap().get(0).unwrap();
+    let file: web_sys::File = file_input
+        .files()
+        .unwrap()
+        .get(0)
+        .unwrap();
 
     let audio_ctx = web_sys::AudioContext::new()?;
 
@@ -67,7 +71,9 @@ async fn load_and_play_file() -> Result<web_sys::AnalyserNode, JsValue> {
             .dyn_into()
             .unwrap();
 
-    let source = audio_ctx.create_buffer_source().unwrap();
+    let source = audio_ctx
+        .create_buffer_source()
+        .unwrap();
 
     source.set_buffer(Some(&buf));
 
@@ -100,8 +106,14 @@ impl Visualizer {
         self.ctx.set_fill_style(&"rgb(0, 0, 0)".into());
         self.ctx.fill_rect(0., 0., width, height);
 
+        let analysis_type = 1;
+
         // set the sound data in the state buffer
-        analyzer.get_byte_frequency_data(&mut self.buf);
+        match analysis_type {
+            1 => analyzer.get_byte_time_domain_data(&mut self.buf), // this looks like bars
+            2 => analyzer.get_byte_frequency_data(&mut self.buf), // this looks like a sine wave
+            _ => log("unsupported data ")
+        }
 
         // get the buffer length
         let buffer_length = analyzer.frequency_bin_count();
@@ -115,8 +127,6 @@ impl Visualizer {
 
         // for each data point, draw a bar
         for i in 0..buffer_length {
-            // let amp = f64::from(self.buf[i]) / 256.0;
-            
             let bar_height = f64::from(self.buf[i as usize]);
 
             // calculate the rgb color of the bar
@@ -124,20 +134,18 @@ impl Visualizer {
             let g = 20.0 * (i as f64 / buffer_length as f64);
             let b = 200.0 * (i as f64 / buffer_length as f64);
 
-            // ctx.fillStyle = `rgb(${r},${g},${b})`;
-
             // this sets the color
             self.ctx.set_fill_style(&format!("rgb({}, {}, {})", r,g,b).into());
+
+            bar_x_offset += f64::from(bar_width);
             
             self.ctx
                 .fill_rect(
                     bar_x_offset, 
                     height - bar_height, 
-                    f64::from(bar_height), 
-                    f64::from(i as f64 * 3.)
+                    f64::from(bar_width), 
+                    bar_height
                 );
-            
-            bar_x_offset += f64::from(bar_width);
 
             self.ctx.fill();
         }
