@@ -5,7 +5,7 @@ use std::panic;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::console;
+// use web_sys::console;
 
 #[wasm_bindgen]
 extern "C" {
@@ -14,9 +14,22 @@ extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
 
+    // The `console.log` is quite polymorphic, so we can bind it with multiple
+    // signatures. Note that we need to use `js_name` to ensure we always call
+    // `log` in JS.
     #[wasm_bindgen(js_namespace = console, js_name = log)]
-    fn log_f64(i: f64);
+    fn log_u32(a: u32);
 
+    // Multiple arguments too!
+    #[wasm_bindgen(js_namespace = console, js_name = log)]
+    fn log_many(a: &str, b: &str);
+}
+
+
+macro_rules! console_log {
+    // Note that this is using the `log` function imported above during
+    // `bare_bones`
+    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
 
 fn window() -> web_sys::Window {
@@ -74,89 +87,58 @@ struct Visualizer {
     width: u32,
     canvas: web_sys::HtmlCanvasElement,
     ctx: web_sys::CanvasRenderingContext2d,
-    tmp_canvas: web_sys::HtmlCanvasElement,
-    tmp_ctx: web_sys::CanvasRenderingContext2d,
     buf: [u8; 2048],
 }
 
-const SLICE_WIDTH: f64 = 2.0 * f64::consts::PI / 2048.0;
-
 impl Visualizer {
-    fn draw(&mut self, i: u32, analyzer: &web_sys::AnalyserNode) {
-        // fetch drawing variables from window
-        let step_factor = window().get("stepFactor").unwrap().as_f64().unwrap();
-        let color_step_factor = window().get("colorStepFactor").unwrap().as_f64().unwrap();
-        let opacity = window().get("opacity").unwrap().as_f64().unwrap();
-        let radius = window().get("radius").unwrap().as_f64().unwrap();
-
-        // save last frame to offscreen canvas with step_factor trimmed off
-        // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
-        self.tmp_ctx
-            .draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
-                &self.canvas,
-                self.width as f64 / step_factor,
-                self.height as f64 / step_factor,
-                self.width as f64 * (step_factor - 2.) / step_factor,
-                self.height as f64 * (step_factor - 2.) / step_factor,
-                0.,
-                0.,
-                self.width as f64,
-                self.height as f64,
-            )
-            .unwrap();
+    fn draw(&mut self, analyzer: &web_sys::AnalyserNode) {
+        // get dimensions in f64
+        let height = f64::from(self.height);
+        let width = f64::from(self.width);
 
         // clear canvas
         self.ctx.set_fill_style(&"rgb(0, 0, 0)".into());
-        self.ctx
-            .fill_rect(0., 0., f64::from(self.width), f64::from(self.height));
+        self.ctx.fill_rect(0., 0., width, height);
 
-        // set color
-        self.ctx.set_fill_style(
-            &format!(
-                "rgb({}, {}, {})",
-                (i as f64 / color_step_factor / 5.).sin() * 127.5 + 127.5,
-                (i as f64 / color_step_factor / 3.).sin() * 127.5 + 127.5,
-                (i as f64 / color_step_factor).sin() * 127.5 + 127.5,
-            )
-            .into(),
-        );
-
-        // draw old frame with opacity
-        self.ctx.set_global_alpha(opacity);
-        self.ctx
-            .draw_image_with_html_canvas_element(&self.tmp_canvas, 0., 0.)
-            .unwrap();
-        self.ctx.set_global_alpha(1.);
-
-        // something
-
+        // set the sound data in the state buffer
         analyzer.get_byte_frequency_data(&mut self.buf);
 
-        // set bar height 
-        // let mut bar_width = (self.width / analyzer.frequency_bin_count()) * 2;
-        let mut bar_width: usize = 10;
-        let bar_height = 10.;
+        // get the buffer length
+        let buffer_length = analyzer.frequency_bin_count();
+
+        // set bar width to be the with divided by the data points
+        let bar_width = (self.width / buffer_length);
+
+        // set the bar offset to be mutable so that we 
+        // can format the bars side-by-side
         let mut bar_x_offset = 0.;
 
-        let dataArray = [..analyzer.frequency_bin_count()];
-
-        let ablength = analyzer.frequency_bin_count() as usize;
-        // @MATH
-        for i in 0..ablength {
+        // for each data point, draw a bar
+        for i in 0..buffer_length {
             // let amp = f64::from(self.buf[i]) / 256.0;
+            
+            let bar_height = f64::from(self.buf[i as usize]);
 
+            // calculate the rgb color of the bar
+            let r = bar_height + 25.0 * (i as f64 / buffer_length as f64);
+            let g = 20.0 * (i as f64 / buffer_length as f64);
+            let b = 200.0 * (i as f64 / buffer_length as f64);
 
-            // bar_width = dataArray[i];
+            // ctx.fillStyle = `rgb(${r},${g},${b})`;
 
-            self.ctx.set_fill_style(&"rgb(128, 0, 0)".into());
+            // this sets the color
+            self.ctx.set_fill_style(&format!("rgb({}, {}, {})", r,g,b).into());
             
             self.ctx
-                .fill_rect(bar_x_offset, bar_x_offset, 
+                .fill_rect(
+                    bar_x_offset, 
+                    height - bar_height, 
                     f64::from(bar_height), 
                     f64::from(i as f64 * 3.)
                 );
             
-                bar_x_offset += 10.0;
+            bar_x_offset += f64::from(bar_width);
+
             self.ctx.fill();
         }
     }
@@ -166,10 +148,15 @@ impl Visualizer {
 pub async fn run() -> Result<(), JsValue> {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
 
+    // use the question mark here for unsafe access, 
+    // basically the shortcut to unwrappingit
     let analyser = load_and_play_file().await?;
 
-    let document = web_sys::window().unwrap().document().unwrap();
+    // this code doesnt run at first, only when a file is uploaded. 
+    // This is becuse of the await statement above.
 
+    // once the file is loaded, we can get the document, canvas, and context
+    let document = web_sys::window().unwrap().document().unwrap();
     let canvas = document.get_element_by_id("canvas").unwrap();
     let canvas: web_sys::HtmlCanvasElement = canvas
         .dyn_into::<web_sys::HtmlCanvasElement>()
@@ -183,44 +170,36 @@ pub async fn run() -> Result<(), JsValue> {
         .dyn_into::<web_sys::CanvasRenderingContext2d>()
         .unwrap();
 
-    let tmp_canvas = document.create_element("canvas").unwrap();
-    let tmp_canvas: web_sys::HtmlCanvasElement = tmp_canvas
-        .dyn_into::<web_sys::HtmlCanvasElement>()
-        .map_err(|_| ())
-        .unwrap();
-
-    tmp_canvas.set_width(canvas.width());
-    tmp_canvas.set_height(canvas.height());
-
-    let tmp_context = tmp_canvas
-        .get_context("2d")
-        .unwrap()
-        .unwrap()
-        .dyn_into::<web_sys::CanvasRenderingContext2d>()
-        .unwrap();
-
     let mut vis = Visualizer {
         height: canvas.height(),
         width: canvas.width(),
         canvas: canvas,
         ctx: context,
-        tmp_canvas: tmp_canvas,
-        tmp_ctx: tmp_context,
         buf: [0; 2048],
     };
 
+    // we're using an `Rc`. The `Rc` will eventually store the
+    // closure we want to execute on each frame, but to start out it contains
+    // `None`.
+    //
+    // After the `Rc` is made we'll actually create the closure, and the closure
+    // will reference one of the `Rc` instances. The other `Rc` reference is
+    // used to store the closure, request the first frame, and then is dropped
+    // by this function.
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
 
-    let mut i = 0;
+    // const bufferLength = analyser.frequencyBinCount; // 1024
+    
+    // this is the closure that will be called on each frame
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-        i += 1;
         analyser.get_byte_time_domain_data(&mut vis.buf);
-        vis.draw(i, &analyser);
+        vis.draw(&analyser);
 
         // Schedule ourself for another requestAnimationFrame callback.
         request_animation_frame(f.borrow().as_ref().unwrap());
     }) as Box<dyn FnMut()>));
+
     request_animation_frame(g.borrow().as_ref().unwrap());
 
     Ok(())
