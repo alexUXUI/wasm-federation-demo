@@ -7,91 +7,6 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::console;
 
-
-
-
-
-
-// #[wasm_bindgen]
-// extern "C" {
-//     // Use `js_namespace` here to bind `console.log(..)` instead of just
-//     // `log(..)`
-//     #[wasm_bindgen(js_namespace = console)]
-//     fn log(s: &str);
-
-//     #[wasm_bindgen(js_namespace = console, js_name = log)]
-//     fn log_f64(i: f64);
-// }
-
-// fn window() -> web_sys::Window {
-//     web_sys::window().expect("no global `window` exists")
-// }
-
-// fn request_animation_frame(f: &Closure<dyn FnMut()>) {
-//     window()
-//         .request_animation_frame(f.as_ref().unchecked_ref())
-//         .expect("should register `requestAnimationFrame` OK");
-// }
-
-// fn document() -> web_sys::Document {
-//     window()
-//         .document()
-//         .expect("should have a document on window")
-// }
-
-// fn body() -> web_sys::HtmlElement {
-//     document().body().expect("document should have a body")
-// }
-
-// #[wasm_bindgen]
-// pub fn init_viz() {
-//     console::log_1(&JsValue::from_str("Hello from Rust Viz Module yooo!"));
-
-//         // Here we want to call `requestAnimationFrame` in a loop, but only a fixed
-//     // number of times. After it's done we want all our resources cleaned up. To
-//     // achieve this we're using an `Rc`. The `Rc` will eventually store the
-//     // closure we want to execute on each frame, but to start out it contains
-//     // `None`.
-//     //
-//     // After the `Rc` is made we'll actually create the closure, and the closure
-//     // will reference one of the `Rc` instances. The other `Rc` reference is
-//     // used to store the closure, request the first frame, and then is dropped
-//     // by this function.
-//     //
-//     // Inside the closure we've got a persistent `Rc` reference, which we use
-//     // for all future iterations of the loop
-//     let f = Rc::new(RefCell::new(None));
-//     let g = f.clone();
-
-//     let mut i = 0;
-//     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-//         if i > 300 {
-//             body().set_text_content(Some("All done!"));
-
-//             // Drop our handle to this closure so that it will get cleaned
-//             // up once we return.
-//             let _ = f.borrow_mut().take();
-//             return;
-//         }
-
-//         // Set the body's text content to how many times this
-//         // requestAnimationFrame callback has fired.
-//         i += 1;
-//         let text = format!("requestAnimationFrame has been called {} times.", i);
-//         body().set_text_content(Some(&text));
-
-//         // Schedule ourself for another requestAnimationFrame callback.
-//         request_animation_frame(f.borrow().as_ref().unwrap());
-//     }) as Box<dyn FnMut()>));
-
-//     request_animation_frame(g.borrow().as_ref().unwrap());
-//     // Ok(())
-// }
-
-
-// extern crate console_error_panic_hook;
-
-
 #[wasm_bindgen]
 extern "C" {
     // Use `js_namespace` here to bind `console.log(..)` instead of just
@@ -167,7 +82,7 @@ struct Visualizer {
 const SLICE_WIDTH: f64 = 2.0 * f64::consts::PI / 2048.0;
 
 impl Visualizer {
-    fn draw(&self, i: u32) {
+    fn draw(&mut self, i: u32, analyzer: &web_sys::AnalyserNode) {
         // fetch drawing variables from window
         let step_factor = window().get("stepFactor").unwrap().as_f64().unwrap();
         let color_step_factor = window().get("colorStepFactor").unwrap().as_f64().unwrap();
@@ -213,30 +128,35 @@ impl Visualizer {
             .unwrap();
         self.ctx.set_global_alpha(1.);
 
-        // render new frame
+        // something
+
+        analyzer.get_byte_frequency_data(&mut self.buf);
+
+        // set bar height 
+        // let mut bar_width = (self.width / analyzer.frequency_bin_count()) * 2;
+        let mut bar_width: usize = 10;
+        let bar_height = 10.;
+        let mut bar_x_offset = 0.;
+
+        let dataArray = [..analyzer.frequency_bin_count()];
+
+        let ablength = analyzer.frequency_bin_count() as usize;
         // @MATH
-        let mut theta = 0.;
-        for i in 0..2048 {
-            theta += SLICE_WIDTH;
-            let amp = f64::from(self.buf[i]) / 256.0;
+        for i in 0..ablength {
+            // let amp = f64::from(self.buf[i]) / 256.0;
 
-            let r = amp * self.height as f64 * 0.2 + self.height as f64 * 0.09;
 
-            let x = f64::from(self.width / 2) + theta.cos() * r;
-            let y = f64::from(self.height / 2) + theta.sin() * r;
+            // bar_width = dataArray[i];
 
             self.ctx.set_fill_style(&"rgb(128, 0, 0)".into());
             
             self.ctx
-                .fill_rect(0., 0., 
-                    f64::from(100), 
-                    f64::from(amp)
+                .fill_rect(bar_x_offset, bar_x_offset, 
+                    f64::from(bar_height), 
+                    f64::from(i as f64 * 3.)
                 );
-
-            self.ctx.begin_path();
-            self.ctx
-                .arc(x, y, radius, 0., 2. * f64::consts::PI)
-                .unwrap();
+            
+                bar_x_offset += 10.0;
             self.ctx.fill();
         }
     }
@@ -296,7 +216,7 @@ pub async fn run() -> Result<(), JsValue> {
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
         i += 1;
         analyser.get_byte_time_domain_data(&mut vis.buf);
-        vis.draw(i);
+        vis.draw(i, &analyser);
 
         // Schedule ourself for another requestAnimationFrame callback.
         request_animation_frame(f.borrow().as_ref().unwrap());
